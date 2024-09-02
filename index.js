@@ -1,4 +1,5 @@
 
+// boks
 
 // // resisar este issues para ver si hay solucion de inicio de session
 // // https://github.com/pedroslopez/whatsapp-web.js/pull/2816
