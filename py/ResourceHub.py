@@ -12,8 +12,9 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import aspose.words as aw
-import aspose.imaging as imaging
-import py.Constant as C
+
+# import aspose.imaging as imaging
+import Constant as C
 
 request_logs = []
 
