@@ -1,5 +1,5 @@
 
-// /home/kimshizi/Documents/test/py/
+// C:\\Users\\nimun\\Documents\\Js\\Bot\\py\\
 // C:\\Users\\nimun\\Documents\\Js\\Bot\\py\\
 
 // boks
@@ -83,7 +83,7 @@ comprobarArchivoHtml()
                 if (message.body.startsWith('/s ')) {
                     const numero = message.body.split(' ')[1];
                     
-                    exec(`python3.7 /home/kimshizi/Documents/test/py/Utils.py ${numero} --mode apiUrl`, (error, stdout, stderr) => {
+                    exec(`python3.7 C:\\Users\\nimun\\Documents\\Js\\Bot\\py\\Utils.py ${numero} --mode apiUrl`, (error, stdout, stderr) => {
                         if (error) {
                             console.error(`Error ejecutando el script: ${error.message}`);
                             return;
@@ -99,7 +99,7 @@ comprobarArchivoHtml()
 
                 if (message.body.startsWith('/d ')) {
                     const numero = message.body.split(' ')[1];
-                    exec(`python3.7 /home/kimshizi/Documents/test/py/Utils.py ${numero} --mode apiDoc`, (error, stdout, stderr) => {
+                    exec(`python3.7 C:\\Users\\nimun\\Documents\\Js\\Bot\\py\\Utils.py ${numero} --mode apiDoc`, (error, stdout, stderr) => {
                         if (error) {
                             console.error(`Error ejecutando el script: ${error.message}`);
                             return;
@@ -215,7 +215,7 @@ comprobarArchivoHtml()
 
 // const { exec } = require('child_process');
 
-// exec('python3.7 /home/kimshizi/Documents/test/py/main.py 1337535', (error, stdout, stderr) => {
+// exec('python3.7 C:\\Users\\nimun\\Documents\\Js\\Bot\\py\\main.py 1337535', (error, stdout, stderr) => {
 //     if (error) {
 //         console.error(`Error ejecutando el script: ${error.message}`);
 //         return;
@@ -323,7 +323,7 @@ client.on('ready', () => {
 //     if (message.body.startsWith('/s ')) 
 //         {
 //             const numero = message.body.split(' ')[1];
-//             exec(`python3.7 /home/kimshizi/Documents/test/py/main.py ${numero}`, (error, stdout, stderr) => {
+//             exec(`python3.7 C:\\Users\\nimun\\Documents\\Js\\Bot\\py\\main.py ${numero}`, (error, stdout, stderr) => {
 //                 if (error) {
 //                     console.error(`Error ejecutando el script: ${error.message}`);
 //                     return;
@@ -347,7 +347,7 @@ client.on('ready', () => {
 //                 // Opcionalmente, loguea la salida estándar para depuración
 //                 console.log(`Salida estándar: ${stdout}`);
                 
-//                 // const filename = `/home/kimshizi/Documents/test/py/pdf\\${stdout}`;
+//                 // const filename = `C:\\Users\\nimun\\Documents\\Js\\Bot\\py\\pdf\\${stdout}`;
 //                 // if (fs.existsSync(filename)){
 //                 //     const fileData = fs.readFileSync(filename);
 //                 //     const media = new MessageMedia('application/pdf', fileData.toString('base64'), path.basename(stderr));
@@ -370,7 +370,7 @@ client.on('ready', () => {
 //         const pdf = MessageMedia.fromFilePath(`${__dirname}/py/pdf/${numero}.pdf`)
 //         console.log(`Salida estándar: ${pdf}`);
 //         client.sendMessage(message.from,pdf)
-//         exec(`python3.7 /home/kimshizi/Documents/test/py/sendpdf.py ${numero}`, (error, stdout, stderr) => {
+//         exec(`python3.7 C:\\Users\\nimun\\Documents\\Js\\Bot\\py\\sendpdf.py ${numero}`, (error, stdout, stderr) => {
 //             if (error) {
 //                 console.error(`Error ejecutando el script: ${error.message}`);
 //                 return;
@@ -406,7 +406,7 @@ client.on('ready', () => {
 client.on('message',async message => {
     if (message.body.startsWith('/s ')) {
         const numero = message.body.split(' ')[1];
-        exec(`python3.7 /home/kimshizi/Documents/test/py/main.py ${numero}`, (error, stdout, stderr) => {
+        exec(`python3.7 C:\\Users\\nimun\\Documents\\Js\\Bot\\py\\main.py ${numero}`, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Error ejecutando el script: ${error.message}`);
                 return;
@@ -431,7 +431,7 @@ client.on('message',async message => {
     if (message.body.startsWith('/d ')) {
         const numero = message.body.split(' ')[1];
         console.log(`Salida estándar: ${numero}`);
-        exec(`python3.7 /home/kimshizi/Documents/test/py/sendpdf.py ${numero}`, (error, stdout, stderr) => {
+        exec(`python3.7 C:\\Users\\nimun\\Documents\\Js\\Bot\\py\\sendpdf.py ${numero}`, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Error ejecutando el script: ${error.message}`);
                 return;
