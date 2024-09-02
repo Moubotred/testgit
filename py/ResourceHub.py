@@ -19,7 +19,7 @@ import Constant as C
 request_logs = []
 
 def cache(suministro):
-    path = r'C:\Users\{}\Documents\Js\Bot\py\pdf'.format(getuser())
+    path = f'/home/{getuser()}/Documents/test/py/pdf'
     os.makedirs(path, exist_ok=True)
     
     pdf_filename = f"{suministro}.pdf"
@@ -137,7 +137,7 @@ def ConvertPdf(filename):
 
 def Templades(pdf_filename):
     if pdf_filename:
-        path = r'C:\Users\{}\Documents\Js\Bot\py\pdf'.format(getuser())
+        path = f'/home/{getuser()}/Documents/test/py/pdf'
         os.makedirs(path, exist_ok=True)
 
         shutil.move(pdf_filename, os.path.join(path, pdf_filename))
@@ -179,11 +179,3 @@ def ConsultApi(ip, port, endpoint, key_data, suministro):
         print(f'Error URL: {e.reason}')
     
     return None
-
-
-
-
-
-
-
-
