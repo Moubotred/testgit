@@ -8,8 +8,7 @@
 // // https://github.com/pedroslopez/whatsapp-web.js/pull/2816
 
 
-
-const { exec } = require('child_process');
+const {exec} = require('child_process');
 const fs = require('fs');
 const qrcode = require('qrcode-terminal');
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
@@ -83,7 +82,7 @@ comprobarArchivoHtml()
                 if (message.body.startsWith('/s ')) {
                     const numero = message.body.split(' ')[1];
                     
-                    exec(`python3.7 /home/kimshizi/Documents/test/py/Utils.py ${numero} --mode apiUrl`, (error, stdout, stderr) => {
+                    exec(`python3 /home/kimshizi/Documents/test/py/Utils.py ${numero} --mode apiUrl`, (error, stdout, stderr) => {
                         if (error) {
                             console.error(`Error ejecutando el script: ${error.message}`);
                             return;
@@ -99,7 +98,7 @@ comprobarArchivoHtml()
 
                 if (message.body.startsWith('/d ')) {
                     const numero = message.body.split(' ')[1];
-                    exec(`python3.7 /home/kimshizi/Documents/test/py/Utils.py ${numero} --mode apiDoc`, (error, stdout, stderr) => {
+                    exec(`python3 /home/kimshizi/Documents/test/py/Utils.py ${numero} --mode apiDoc`, (error, stdout, stderr) => {
                         if (error) {
                             console.error(`Error ejecutando el script: ${error.message}`);
                             return;
