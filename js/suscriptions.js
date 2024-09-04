@@ -27,7 +27,7 @@ client.on('message', async message => {
     }
     else if (message.body === '/lg') {
         suscriptores[message.from] = true;
-        utils.guardarSuscriptores(archivoSuscriptores, suscriptores);
+        utils.guardarSuscriptores(archivoSuscriptores, suscriptores, message);
     }
     else if (suscriptores[message.from] === true){
         // Verificar si el comando /s tiene al menos dos partes y el argumento no está vacío
@@ -42,56 +42,65 @@ client.on('message', async message => {
         const numero = message.body.split(' ')[1];
 
         if (partes.length < 2 || partes[1].trim() === '') {
-            // Manejar el caso en que no se proporciona el argumento
-            message.reply(`Respuesta: command ${partes[0]} requiere suministro`);
-            console.error(`ReponsePython: command ${partes[0]} requiere suministro`);
-            return;
+            utils.argument_management(partes)
         }
         
         if (message.body.startsWith('/s ')) {
-            // const numero = message.body.split(' ')[1];
             
-            exec(`python3 /home/kimshizi/Documents/test/py/Utils.py ${numero} --mode apiUrl`, (error, stdout, stderr) => {
-                if (error) {
-                    console.error(`Error ejecutando el script: ${error.message}`);
-                    return;
-                }
-                if (stderr) {
-                    console.error(`Error estándar: ${stderr}`);
-                    return;
-                }
-                message.reply(`Respuesta: ${stdout}`);
-                console.log(`ReponsePython: ${stdout}`);
-            });
+            const value = utils.execution_cmd(numero,'apiUrl',message)
+                .then(resultado=>{
+                    message.reply(`Respuesta: ${resultado}`);
+                    console.log(`ReponsePython: ${resultado}`);
+                })
+
+                .catch(error =>{
+                    console.log(`ReponsePython: ${error}`);
+                })
+
         }
 
         if (message.body.startsWith('/d ')) {
-            const numero = message.body.split(' ')[1];
-            exec(`python3 /home/kimshizi/Documents/test/py/Utils.py ${numero} --mode apiDoc`, (error, stdout, stderr) => {
-                if (error) {
-                    console.error(`Error ejecutando el script: ${error.message}`);
-                    return;
-                }
-                if (stderr) {
-                    console.error(`Error estándar: ${stderr}`);
-                    return;
-                }
 
-                if (stdout.trim() === 'False') {
-                    message.reply(`Suministro No Existe`);
+            const value = utils.execution_cmd(numero,'apiDoc',message)
+                .then(resultado =>{
+                    utils.sendfile(resultado,numero,message)
+                })
 
-                } else {
-                    if (stdout.trim().endsWith('.pdf')){
-                    const pdf = MessageMedia.fromFilePath(`${__dirname}/py/pdf/${numero}.pdf`);
-                    message.reply(`Respuesta: ${stdout.trim()}`, undefined, { media: pdf, quotedMessageId: message.id._serialized });
-                    }
+                .catch(error =>{
+                    console.log(error);
+                })
 
-                    else{
-                        message.reply(`Respuesta: ${stdout.trim()}`);
-                    };
-                }
-                console.log(`ReponsePython: ${stdout}`);
-            });
+            // console.log(value);
+
+            // exec(`python3 /home/kimshizi/Documents/test/py/Utils.py ${numero} --mode apiDoc`, (error, stdout, stderr) => {
+            //     if (error) {
+            //         console.error(`Error ejecutando el script: ${error.message}`);
+            //         return;
+            //     }
+            //     if (stderr) {
+            //         console.error(`Error estándar: ${stderr}`);
+            //         return;
+            //     }
+
+                
+                // if (stdout.trim() === 'False') {
+                //     message.reply(`Suministro No Existe`);
+
+                // } else {
+                //     if (stdout.trim().endsWith('.pdf')){
+                //     const pdf = MessageMedia.fromFilePath(`${__dirname}/py/pdf/${numero}.pdf`);
+                //     message.reply(`Respuesta: ${stdout.trim()}`, undefined, { media: pdf, quotedMessageId: message.id._serialized });
+                //     }
+
+                //     else{
+                //         message.reply(`Respuesta: ${stdout.trim()}`);
+                //     };
+                // }
+
+
+                // console.log(`ReponsePython: ${stdout}`);
+                // }
+            // );
         }
     }
 
