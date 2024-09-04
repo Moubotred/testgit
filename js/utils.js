@@ -1,9 +1,34 @@
 const {exec} = require('child_process');
 const fs = require('fs');
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const {MessageMedia } = require('whatsapp-web.js');
 
 function help(message) {
-    const banner = 'Bienvenido al bot:\n\ncomandos:\n\n/lg suscribir al bot\n/s obtener url\n/d obtener pdf';
+    // const banner = '🤖 Bienvenido al bot:\n\ncomandos:\n\n/lg suscribir al bot\n/s obtener url\n/d obtener pdf';
+    const banner = `👑 Fundador:
+        └ @Tony 
+    ⚜ Descripcion:
+    ├
+    ├ bot creado para 
+    ├ realizar consultas
+    └ al sitio hasber
+
+    ⚜ Comandos:
+    ├
+    ├ /lg regitrar usuario 
+    ├ /s solicitar url de carta
+    ├ /d solicitar pdf de carta
+    └ /t solicitar carta por foto
+        └ ⚜ Ejemplo de uso :
+            ├ /s 1337535
+            └ /d 1337535   
+            
+    ⚜ Reportes o mejoras: 
+    ├
+    ├ ayudame a mejor el bot 
+    ├ o agregar nuevas funciones
+    └ escribeme al numero 915985153
+    `;
+
     message.reply(banner);
 }
 
@@ -44,10 +69,6 @@ function sendfile(evalue,numero,message){
         //     message.reply(`Respuesta: ${stdout.trim()}`);
         // };
     }
-
-
-    // console.log(`ReponsePython: ${stdout}`);
-// }
 
 function execution_cmd(suministro, mode, message) {
     // Validación básica de parámetros
