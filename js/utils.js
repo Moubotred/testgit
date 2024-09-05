@@ -47,15 +47,13 @@ function database(filesuscription) {
     return suscriptores;
 }
 
-function argument_management(partes){
+function argument_management(partes,message){
     message.reply(`Respuesta: command ${partes[0]} requiere suministro`);
     console.error(`ReponsePython: command ${partes[0]} requiere suministro`);
     return;
 }
 
 function sendfile(evalue,numero,message){
-
-
     if (evalue.trim() === 'suministro no existe en base de datos') {
         message.reply(`Suministro No Existe`);
 
