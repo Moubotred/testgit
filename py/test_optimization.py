@@ -48,15 +48,19 @@ def cargo_de_envios(wait):
         # time.sleep(2)
         info = wait.until(EC.presence_of_element_located((By.ID,'sp_cargo_documento'))).text
         if 'CARTAS / REEMPLAZO DE MEDIDOR EMPRESAS' == info:
+            wait.until(EC.presence_of_element_located((By.ID, C.exp.cargo))).click()
+            # //*[@id="btndetcargo"]
             # time.sleep(1)
             Framesubdoc = wait.until(EC.presence_of_element_located((By.ID, C.exp.subdoc))).get_attribute('src')
             return Framesubdoc
-        
         elif 'VOLANTES / AVISO DE CORTE' == info:
             return 'No hay carta de CAMBIO DE MEDIDOR solo AVISO DE CORTE'
+        elif 'RECIBO / POSTALES' == info:
+            return 'No hay carta de CAMBIO DE MEDIDOR solo POSTALES'
     
 @medir_tiempo
 def test_add(wait, suministro):
+
     """
     Interactúa con una página web para enviar un suministro y obtener un atributo del iframe.
     
@@ -67,6 +71,7 @@ def test_add(wait, suministro):
     Returns:
         str: El valor del atributo 'src' del iframe.
     """
+
     try:
         time.sleep(2)
         sandbox = wait.until(EC.presence_of_element_located((By.ID, C.exp.box)))
@@ -74,6 +79,8 @@ def test_add(wait, suministro):
 
         sendContent = wait.until(EC.presence_of_all_elements_located((By.XPATH, C.exp.btn)))
         sendContent[0].click()
+
+        
 
         rs = cargo_de_envios(wait)
         return rs
