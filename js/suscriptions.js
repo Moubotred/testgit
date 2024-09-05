@@ -31,77 +31,137 @@ client.on('message', async message => {
     }
     else if (suscriptores[message.from] === true){
         // Verificar si el comando /s tiene al menos dos partes y el argumento no está vacío
-
         const contact = await message.getContact();
         const contactName = contact.pushname || contact.notifyName || 'Undefined';
-        console.log('');
-        console.log(`by: ${contactName}`);
-        console.log('Command:',message.body);
-
         const partes = message.body.split(' ');
-        const numero = message.body.split(' ')[1];
+        const suministro = message.body.split(' ')[1];        
 
-        if (partes.length < 2 || partes[1].trim() === '') {
-            utils.argument_management(partes)
-        }
+        // console.log(suministro);
+        // if (partes.length < 2 || partes[1].trim() === '') {
+            // utils.argument_management(partes,message)
+        // }
         
-        if (message.body.startsWith('/s ')) {
+        if (!isNaN(suministro) && suministro.length >= 1 && suministro.length <= 7) {
+
+            console.log(`by: ${contactName}`);
+            console.log('Command:',message.body);
+
+            if (message.body.startsWith('/s ')) {
             
-            const value = utils.execution_cmd(numero,'apiUrl',message)
-                .then(resultado=>{
-                    message.reply(`Respuesta: ${resultado}`);
-                    console.log(`ReponsePython: ${resultado}`);
-                })
-
-                .catch(error =>{
-                    console.log(`ReponsePython: ${error}`);
-                })
-
+                const value = utils.execution_cmd(suministro,'apiUrl',message)
+                    .then(resultado=>{
+                        message.reply(`Respuesta: ${resultado}`);
+                        console.log(`ReponsePython: ${resultado}`);
+                    })
+    
+                    .catch(error =>{
+                        console.log(`ReponsePython: ${error}`);
+                    })
+    
+            }
+    
+            if (message.body.startsWith('/d ')) {
+    
+                const value = utils.execution_cmd(suministro,'apiDoc',message)
+                    .then(resultado =>{
+                        utils.sendfile(resultado,suministro,message)
+                    })
+    
+                    .catch(error =>{
+                        console.log(error);
+                    })
+    
+                // console.log(value);
+    
+                // exec(`python3 /home/kimshizi/Documents/test/py/Utils.py ${suministro} --mode apiDoc`, (error, stdout, stderr) => {
+                //     if (error) {
+                //         console.error(`Error ejecutando el script: ${error.message}`);
+                //         return;
+                //     }
+                //     if (stderr) {
+                //         console.error(`Error estándar: ${stderr}`);
+                //         return;
+                //     }
+    
+                    
+                    // if (stdout.trim() === 'False') {
+                    //     message.reply(`Suministro No Existe`);
+    
+                    // } else {
+                    //     if (stdout.trim().endsWith('.pdf')){
+                    //     const pdf = MessageMedia.fromFilePath(`${__dirname}/py/pdf/${suministro}.pdf`);
+                    //     message.reply(`Respuesta: ${stdout.trim()}`, undefined, { media: pdf, quotedMessageId: message.id._serialized });
+                    //     }
+    
+                    //     else{
+                    //         message.reply(`Respuesta: ${stdout.trim()}`);
+                    //     };
+                    // }
+    
+    
+                    // console.log(`ReponsePython: ${stdout}`);
+                    // }
+                // );
+            }
         }
 
-        if (message.body.startsWith('/d ')) {
+        // if (message.body.startsWith('/s ')) {
+            
+        //     const value = utils.execution_cmd(suministro,'apiUrl',message)
+        //         .then(resultado=>{
+        //             message.reply(`Respuesta: ${resultado}`);
+        //             console.log(`ReponsePython: ${resultado}`);
+        //         })
 
-            const value = utils.execution_cmd(numero,'apiDoc',message)
-                .then(resultado =>{
-                    utils.sendfile(resultado,numero,message)
-                })
+        //         .catch(error =>{
+        //             console.log(`ReponsePython: ${error}`);
+        //         })
 
-                .catch(error =>{
-                    console.log(error);
-                })
+        // }
 
-            // console.log(value);
+        // if (message.body.startsWith('/d ')) {
 
-            // exec(`python3 /home/kimshizi/Documents/test/py/Utils.py ${numero} --mode apiDoc`, (error, stdout, stderr) => {
-            //     if (error) {
-            //         console.error(`Error ejecutando el script: ${error.message}`);
-            //         return;
-            //     }
-            //     if (stderr) {
-            //         console.error(`Error estándar: ${stderr}`);
-            //         return;
-            //     }
+        //     const value = utils.execution_cmd(suministro,'apiDoc',message)
+        //         .then(resultado =>{
+        //             utils.sendfile(resultado,suministro,message)
+        //         })
+
+        //         .catch(error =>{
+        //             console.log(error);
+        //         })
+
+        //     // console.log(value);
+
+        //     // exec(`python3 /home/kimshizi/Documents/test/py/Utils.py ${suministro} --mode apiDoc`, (error, stdout, stderr) => {
+        //     //     if (error) {
+        //     //         console.error(`Error ejecutando el script: ${error.message}`);
+        //     //         return;
+        //     //     }
+        //     //     if (stderr) {
+        //     //         console.error(`Error estándar: ${stderr}`);
+        //     //         return;
+        //     //     }
 
                 
-                // if (stdout.trim() === 'False') {
-                //     message.reply(`Suministro No Existe`);
+        //         // if (stdout.trim() === 'False') {
+        //         //     message.reply(`Suministro No Existe`);
 
-                // } else {
-                //     if (stdout.trim().endsWith('.pdf')){
-                //     const pdf = MessageMedia.fromFilePath(`${__dirname}/py/pdf/${numero}.pdf`);
-                //     message.reply(`Respuesta: ${stdout.trim()}`, undefined, { media: pdf, quotedMessageId: message.id._serialized });
-                //     }
+        //         // } else {
+        //         //     if (stdout.trim().endsWith('.pdf')){
+        //         //     const pdf = MessageMedia.fromFilePath(`${__dirname}/py/pdf/${suministro}.pdf`);
+        //         //     message.reply(`Respuesta: ${stdout.trim()}`, undefined, { media: pdf, quotedMessageId: message.id._serialized });
+        //         //     }
 
-                //     else{
-                //         message.reply(`Respuesta: ${stdout.trim()}`);
-                //     };
-                // }
+        //         //     else{
+        //         //         message.reply(`Respuesta: ${stdout.trim()}`);
+        //         //     };
+        //         // }
 
 
-                // console.log(`ReponsePython: ${stdout}`);
-                // }
-            // );
-        }
+        //         // console.log(`ReponsePython: ${stdout}`);
+        //         // }
+        //     // );
+        // }
     }
 
 });
