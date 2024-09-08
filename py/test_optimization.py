@@ -6,17 +6,20 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
 from selenium.common.exceptions import WebDriverException
 
 import time
 from flask import Flask, request, jsonify
+import ResourceHub as Rb
+import requests
 
 app = Flask(__name__)
 
 # Variables globales para el WebDriver y WebDriverWait
 driver = None
 wait = None
+
+
 
 def medir_tiempo(func):
     """
@@ -163,6 +166,27 @@ def procesar_suministro():
         return jsonify({"error": str(e)}), 500
 
     return jsonify({"result": result})
+
+@app.route('/procesar_convertir_pdf', methods=['POST'])
+def procesar_suministro():
+    data = request.json
+    suministro = data.get('suministro')
+    if suministro is None:
+        return jsonify({"error": "Debe proporcionar un suministro."}), 400
+
+    # Llamar al endpoint que procesa el suministro y obtiene la URL del PDF
+    response = requests.post("http://localhost:5000/procesar_suministro", json={"suministro": suministro})
+    if response.status_code != 200:
+        return jsonify({"error": "Error al procesar el suministro."}), response.status_code
+
+    result = response.json()
+    result_url = result.get('result')
+    url_ = Rb.UrlSubdoc(result_url)
+    filename = Rb.FileWebDownloads(url_)
+    ff = Rb.ConvertPdf(filename)
+    Rb.Templades(ff)
+
+    return jsonify({"result": filename})
 
 if __name__ == "__main__":
     init_browser()  # Inicializa el navegador cuando se inicia la aplicación
