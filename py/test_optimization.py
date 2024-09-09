@@ -222,8 +222,17 @@ def process_imagen_pdf():
     with open("/home/kimshizi/Documents/test/py/tmp/tunnel.json", "r") as archivo:
         rs = json.load(archivo)
         tunnel = rs.get('tunnel')
-    suministro = Rb.GoogleLents(driver,wait,tunnel,'sum.jpg')
-    return jsonify({"result": suministro})    
+    
+    suministro = Rb.GoogleLents(driver,wait,tunnel,supply)
+
+    response = requests.post("http://localhost:5000/process_convert_pdf", json={"suministro": suministro})
+    if response.status_code != 200:
+        return jsonify({"error": "Error processing the supply."}), response.status_code
+
+    result = response.json()
+    result_name = result.get('result')
+
+    return jsonify({"result":result_name})    
 
 if __name__ == "__main__":
     init_browser()  # Initialize the browser when the application starts
