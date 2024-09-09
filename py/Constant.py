@@ -6,4 +6,10 @@ class exp:
     info = '/html/body/div[1]/div[2]/div/div[1]/div/div/div[1]/div/div/div[2]/div[1]/div/div/div[1]/div/table[1]/tbody/tr[2]/td/span/br'
     tr = '/html/body/div[1]/div[2]/div/div[1]/div/div/div[2]/div/div/div/div/div[2]/div/div/div/div[1]/div[2]/div[2]/table/tbody/tr[@]/td[1]/div'
     cargo = 'btndetcargo'
+
+    lents = '//input[@placeholder="Paste image link"]'
+    traducir = '/html/body/c-wiz/div/div[2]/div/c-wiz/div/div[1]/div/div[3]/div/div/span[3]/span'
+    search = '//div[@role="button" and @class="Qwbd3"]'
+    contenedor = 'QeOavc'
+    elementos = './/div[@dir="ltr"]'
     # tr = '//td[@field="estado_solo"]'
