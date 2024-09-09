@@ -3,20 +3,34 @@ import json
 import time
 import shutil
 import urllib.parse
+import re
+
+from Constant import exp
+
 import urllib.request
 from getpass import getuser
 from urllib.parse import urlparse, parse_qs
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoSuchWindowException
 import aspose.words as aw
 
+import os
+import time
+import platform
+import subprocess
+from pyngrok import ngrok
+from dotenv import load_dotenv
+from multiprocessing.pool import ThreadPool
+
 # import aspose.imaging as imaging
-import Constant as C
 
 request_logs = []
+DD = 'tmp'
 
 def cache(suministro):
     path = f'/home/{getuser()}/Documents/test/py/pdf'
@@ -28,76 +42,29 @@ def cache(suministro):
     else:
         return None
 
-# def load_existing_logs(filename):
-#     try:
-#         with open(filename, 'r') as file:
-#             if file.read(1):
-#                 file.seek(0)  # Rewind the file if not empty
-#                 return json.load(file)
-#             else:
-#                 return {}  # Return an empty dict if file is empty
-#     except FileNotFoundError:
-#         return {}  # Return an empty dict if file does not exist
-#     except json.JSONDecodeError:
-#         return {}  # Return an empty dict if JSON is invali
-    
-# def save_logs_to_file(logs, filename='request_logs.json'):
-#     """
-#     Guarda los registros en el archivo JSON, reemplazando el contenido existente.
-#     """
-#     with open(filename, 'w') as file:
-#         json.dump(logs, file, indent=4)
-
-# def log_request(suministro, response_data, filename='request_logs.json'):
-#     """
-#     Registra la solicitud y la respuesta en un formato JSON.
-#     """
-#     try:
-#         # Cargar registros existentes
-#         logs = load_existing_logs(filename)
-        
-#         # Agregar el nuevo registro
-#         request_log = {
-#             "suministro": suministro,
-#             "response": response_data
-#         }
-#         logs.append(request_log)
-        
-#         # Guardar los registros actualizados en el archivo JSON
-#         save_logs_to_file(logs, filename)
-
-#     except AttributeError:
-#         pass
-
-# def obtener_valores(suministro,datos):
-#     for item in datos:
-#         if item['suministro'] == suministro:
-#             return item['response']
-#     return None
-
-
 def SearchFileWeb(suministro):
+    global wait
     options = Options()
     # options.add_argument("--headless")
     driver = webdriver.Firefox(options=options)
     wait = WebDriverWait(driver, 60)
     driver.get('https://hasbercourier.easyenvios.com/')
 
-    sandbox = wait.until(EC.presence_of_element_located((By.ID, C.exp.box)))
+    sandbox = wait.until(EC.presence_of_element_located((By.ID, exp.box)))
     sandbox.send_keys(suministro)
 
-    sendContent = wait.until(EC.presence_of_all_elements_located((By.XPATH, C.exp.btn)))
+    sendContent = wait.until(EC.presence_of_all_elements_located((By.XPATH, exp.btn)))
     sendContent[0].click()
 
     time.sleep(2)
 
-    table_send = wait.until(EC.presence_of_all_elements_located((By.XPATH, C.exp.table)))
+    table_send = wait.until(EC.presence_of_all_elements_located((By.XPATH, exp.table)))
     for n_ in range(len(table_send)):
-        table_tr = wait.until(EC.presence_of_element_located((By.XPATH,C.exp.tr.replace('@',f'{n_+1}')))).click()
+        table_tr = wait.until(EC.presence_of_element_located((By.XPATH,exp.tr.replace('@',f'{n_+1}')))).click()
         info = wait.until(EC.presence_of_element_located((By.ID,'sp_cargo_documento'))).text
         if 'CARTAS / REEMPLAZO DE MEDIDOR EMPRESAS' == info:
             time.sleep(2)
-            Framesubdoc = wait.until(EC.presence_of_element_located((By.ID, C.exp.subdoc))).get_attribute('src')
+            Framesubdoc = wait.until(EC.presence_of_element_located((By.ID, exp.subdoc))).get_attribute('src')
             driver.quit()
             print(Framesubdoc)
             return Framesubdoc, suministro
@@ -146,10 +113,6 @@ def Templades(pdf_filename):
         print("No se encontró el archivo PDF para aplicar la plantilla.")
 
 def ConsultApi(ip, port, endpoint, key_data, suministro):
-    # Verifica la caché primero
-    # pdf_file = cache(suministro)
-    # if pdf_file:
-    #     return pdf_file
     
     # Si no se encuentra en la caché, procede con la solicitud
     url = f"http://{ip}:{port}/{endpoint}"
@@ -170,7 +133,7 @@ def ConsultApi(ip, port, endpoint, key_data, suministro):
             # Registrar la solicitud y la respuesta
             # log_request(suministro,data_r,filename='request_logs.json')
             if data_r is None:
-                return 'suministro no existe en base de datos'
+                return 
             return data_r
         
     except urllib.error.HTTPError as e:
@@ -179,3 +142,85 @@ def ConsultApi(ip, port, endpoint, key_data, suministro):
         print(f'Error URL: {e.reason}')
     
     return None
+
+def Directorios(directorio):
+    def Servidor(func):
+        def python(*args,**kwargs):
+            if directorio:
+                target_dir = os.path.join(os.getcwd(),directorio)  # Subdirectorio
+
+            if not os.path.exists(target_dir):
+                os.makedirs(target_dir)
+
+            os.chdir(target_dir)
+            return func(*args, **kwargs)  # Ejecutar la función original
+        return python
+    return Servidor
+
+@Directorios(DD)
+def ServicioPython():
+    so = platform.system() 
+    python = 'python3'if so == 'Linux'else 'python'
+    subprocess.Popen([f"{python}", "-m", "http.server", "5090"],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    print('[+] Corriendo Servidor Python')
+
+# @Directorios(DD)
+def ServicioNgrok():
+    load_dotenv(dotenv_path='/home/kimshizi/Documents/test/py/token.env')
+    PUERTO = 5090
+    ngrok.set_auth_token(os.getenv('access'))
+    url_publica = ngrok.connect(PUERTO)
+    print('[+] Corriendo tunnel ngrok')
+
+def Servicios():
+    pool = ThreadPool(2)
+    pool.apply_async(ServicioPython())
+    pool.apply_async(ServicioNgrok())
+    time.sleep(2)  # Dar tiempo para que ngrok inicie
+    tunnels = ngrok.get_tunnels()
+    urlTunnel = str(tunnels[0].public_url) if tunnels else None
+    
+    data = {
+        'tunnel':urlTunnel
+    }
+
+    with open("tunnel.json", "w") as archivo:
+        json.dump(data, archivo)
+
+    print("[+] Iniciando Los servicios")
+    print("[+] Tunnel: ", urlTunnel, '\n')
+
+def GoogleLents(driver,wait,tunnel,filename):
+    # with open("/home/kimshizi/Documents/test/py/tmp/tunnel.json", "r") as archivo:
+    #     rs = json.load(archivo)
+    #     tunnel = rs.get('tunnel')
+
+    # options = Options()
+    # driver = webdriver.Firefox(options=options)
+    # wait = WebDriverWait(driver, 10)
+    # driver.get('https://www.google.com/?olud')
+
+    list_information = []
+
+    driver.execute_script("window.open('https://www.google.com/?olud', '');")
+    driver.switch_to.window(driver.window_handles[-1])
+
+    sandbox = wait.until(EC.presence_of_element_located((By.XPATH, exp.lents)))
+    sandbox.send_keys(tunnel+'/'+filename)
+
+    search = wait.until(EC.element_to_be_clickable((By.XPATH,exp.search))).click()
+    translate = wait.until(EC.element_to_be_clickable((By.ID, 'ucj-3'))).click()
+
+    # Localizar el contenedor principal
+    container = wait.until(EC.presence_of_element_located((By.CLASS_NAME,exp.contenedor)))
+
+    # Localizar todos los 'div' hijos dentro del contenedor
+    child_divs = container.find_elements(By.XPATH,exp.elementos)
+
+    # Obtener el texto de cada uno de los elementos
+    for div in child_divs:
+        result = re.sub(r'\D', '', div.text)
+        if result:
+            list_information.append(result)
+        
+    return list_information[0]
