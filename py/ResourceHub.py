@@ -23,7 +23,8 @@ import os
 import time
 import platform
 import subprocess
-from pyngrok import ngrok
+# from pyngrok import ngrok
+from pyngrok import ngrok, conf
 from dotenv import load_dotenv
 from multiprocessing.pool import ThreadPool
 
@@ -165,12 +166,20 @@ def ServicioPython():
     print('[+] Corriendo Servidor Python')
 
 # @Directorios(DD)
+# def ServicioNgrok():
+#     load_dotenv(dotenv_path='/home/kimshizi/Documents/test/py/token.env')
+#     PUERTO = 5090
+#     ngrok.set_auth_token(os.getenv('access'))
+#     url_publica = ngrok.connect(PUERTO)
+#     print('[+] Corriendo tunnel ngrok')
+
 def ServicioNgrok():
+    # Cargar el archivo .env
     load_dotenv(dotenv_path='/home/kimshizi/Documents/test/py/token.env')
-    PUERTO = 5090
-    ngrok.set_auth_token(os.getenv('access'))
-    url_publica = ngrok.connect(PUERTO)
-    print('[+] Corriendo tunnel ngrok')
+    # Obtener el token de acceso desde el archivo .env
+    token_ngrok = os.getenv('access')
+    tunnel = ngrok.connect(5090, "http")
+    print('[+] corriendo Tunnel:')
 
 def Servicios():
     pool = ThreadPool(2)
@@ -188,7 +197,7 @@ def Servicios():
         json.dump(data, archivo)
 
     print("[+] Iniciando Los servicios")
-    print("[+] Tunnel: ", urlTunnel, '\n')
+    print("[+] Tunnel:", urlTunnel, '\n')
 
 def GoogleLents(driver,wait,tunnel,filename):
     # with open("/home/kimshizi/Documents/test/py/tmp/tunnel.json", "r") as archivo:
@@ -222,5 +231,11 @@ def GoogleLents(driver,wait,tunnel,filename):
         result = re.sub(r'\D', '', div.text)
         if result:
             list_information.append(result)
-        
+            
+    driver.close()
+    driver.switch_to.window(driver.window_handles[0])    
+    
     return list_information[0]
+
+
+# Servicios()
