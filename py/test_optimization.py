@@ -222,7 +222,7 @@ def process_imagen_pdf():
     if supply is None:
         return jsonify({"error": "You must provide a supply."}), 400
 
-    tunnel = Rb.GetTunnel()
+    tunnel = Rb.obtener_url_tunnel()
     
     suministro = Rb.GoogleLents(driver,wait,tunnel,supply)
 
@@ -234,7 +234,6 @@ def process_imagen_pdf():
     result_name = result.get('result')
 
     return jsonify({"result":result_name})    
-
 
 @app.route('/')
 def index():
