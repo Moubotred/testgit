@@ -13,10 +13,13 @@ from flask import Flask, request, jsonify
 import ResourceHub as Rb
 import requests
 import threading
-from ResourceHub import Servicios
-import Constant as C 
 
+from ResourceHub import Servicios,obtener_url_tunnel
+
+import Constant as C 
 import json
+
+# from multiprocessing.pool import ThreadPool
 
 app = Flask(__name__)
 
@@ -219,9 +222,7 @@ def process_imagen_pdf():
     if supply is None:
         return jsonify({"error": "You must provide a supply."}), 400
 
-    with open("/home/kimshizi/Documents/test/py/tmp/tunnel.json", "r") as archivo:
-        rs = json.load(archivo)
-        tunnel = rs.get('tunnel')
+    tunnel = Rb.GetTunnel()
     
     suministro = Rb.GoogleLents(driver,wait,tunnel,supply)
 
@@ -234,6 +235,14 @@ def process_imagen_pdf():
 
     return jsonify({"result":result_name})    
 
+
+@app.route('/')
+def index():
+    url = obtener_url_tunnel()
+    return url
+
 if __name__ == "__main__":
+    hilo_servicios = threading.Thread(target=Rb.Servicios)
+    hilo_servicios.start()
     init_browser()  # Initialize the browser when the application starts
     app.run(host='0.0.0.0', port=5000)
