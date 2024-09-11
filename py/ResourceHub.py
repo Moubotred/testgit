@@ -248,6 +248,4 @@ def GoogleLents(driver,wait,tunnel,filename):
     driver.close()
     driver.switch_to.window(driver.window_handles[0])    
     
-    return list_information[0]
-
-# 
+    return list_information[0] 
