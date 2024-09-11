@@ -221,14 +221,6 @@ def obtener_url_tunnel():
         return urlTunnel
 
 def GoogleLents(driver,wait,tunnel,filename):
-    # with open("/home/kimshizi/Documents/test/py/tmp/tunnel.json", "r") as archivo:
-    #     rs = json.load(archivo)
-    #     tunnel = rs.get('tunnel')
-
-    # options = Options()
-    # driver = webdriver.Firefox(options=options)
-    # wait = WebDriverWait(driver, 10)
-    # driver.get('https://www.google.com/?olud')
 
     list_information = []
 
@@ -237,8 +229,6 @@ def GoogleLents(driver,wait,tunnel,filename):
 
     sandbox = wait.until(EC.presence_of_element_located((By.XPATH, exp.lents)))
     sandbox.send_keys(tunnel+'/tmp/'+filename)
-
-    time.sleep(30)
 
     search = wait.until(EC.element_to_be_clickable((By.XPATH,exp.search))).click()
     translate = wait.until(EC.element_to_be_clickable((By.ID, 'ucj-3'))).click()
@@ -259,3 +249,5 @@ def GoogleLents(driver,wait,tunnel,filename):
     driver.switch_to.window(driver.window_handles[0])    
     
     return list_information[0]
+
+# 
