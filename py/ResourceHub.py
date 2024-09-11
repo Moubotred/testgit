@@ -26,7 +26,8 @@ import subprocess
 # from pyngrok import ngrok
 from pyngrok import ngrok, conf
 from dotenv import load_dotenv
-from multiprocessing.pool import ThreadPool
+
+# from multiprocessing.pool import ThreadPool
 
 # import aspose.imaging as imaging
 
@@ -158,46 +159,66 @@ def Directorios(directorio):
         return python
     return Servidor
 
+
+from multiprocessing.pool import ThreadPool
+import threading
+
+urlTunnel = None
+lock = threading.Lock()  # Crear un lock para asegurar el acceso a urlTunnel
+servicios_iniciados = False
+
+# -------- importaciones necesarias sino causa errores al momento de combinarlo con flask cuando se llama a Servicios
+from multiprocessing.synchronize import Lock
+from multiprocessing.queues import SimpleQueue
+from multiprocessing.dummy import Process
+
 @Directorios(DD)
 def ServicioPython():
     so = platform.system() 
-    python = 'python3'if so == 'Linux'else 'python'
-    subprocess.Popen([f"{python}", "-m", "http.server", "5090"],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    python = 'python3' if so == 'Linux' else 'python'
+    subprocess.Popen([f"{python}", "-m", "http.server", "5090"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     print('[+] Corriendo Servidor Python')
-
-# @Directorios(DD)
-# def ServicioNgrok():
-#     load_dotenv(dotenv_path='/home/kimshizi/Documents/test/py/token.env')
-#     PUERTO = 5090
-#     ngrok.set_auth_token(os.getenv('access'))
-#     url_publica = ngrok.connect(PUERTO)
-#     print('[+] Corriendo tunnel ngrok')
 
 def ServicioNgrok():
     # Cargar el archivo .env
     load_dotenv(dotenv_path='/home/kimshizi/Documents/test/py/token.env')
     # Obtener el token de acceso desde el archivo .env
     token_ngrok = os.getenv('access')
-    tunnel = ngrok.connect(5090, "http")
-    print('[+] corriendo Tunnel:')
+    ngrok.set_auth_token(token_ngrok)  # Asegúrate de establecer el token antes de conectar
+    tunnel = ngrok.connect(5090, "http",subdomain="osise")
+    print('[+] Corriendo Tunnel ngrok')
 
 def Servicios():
-    pool = ThreadPool(2)
-    pool.apply_async(ServicioPython())
-    pool.apply_async(ServicioNgrok())
-    time.sleep(2)  # Dar tiempo para que ngrok inicie
-    tunnels = ngrok.get_tunnels()
-    urlTunnel = str(tunnels[0].public_url) if tunnels else None
+    global urlTunnel, servicios_iniciados
     
-    data = {
-        'tunnel':urlTunnel
-    }
+    with lock:  # Proteger acceso a la bandera servicios_iniciados
+        if servicios_iniciados:
+            print("\n[!] Los servicios ya están en ejecución, no se reiniciarán\n")
+            return  # No ejecutar los servicios si ya están corriendo
+        servicios_iniciados = True  # Marcar los servicios como iniciados
 
-    with open("tunnel.json", "w") as archivo:
-        json.dump(data, archivo)
+    pool = ThreadPool(2)
+
+    # Ejecutar funciones asíncronas sin los paréntesis
+    pool.apply_async(ServicioPython)
+    pool.apply_async(ServicioNgrok)
+
+    time.sleep(2)  # Dar tiempo para que ngrok inicie
+
+    # Obtener túneles de Ngrok
+    tunnels = ngrok.get_tunnels()
+
+    with lock:  # Bloquear antes de modificar urlTunnel
+        urlTunnel = str(tunnels[0].public_url) if tunnels else None
 
     print("[+] Iniciando Los servicios")
-    print("[+] Tunnel:", urlTunnel, '\n')
+    with lock:
+        print("[+] Tunnel:", urlTunnel)
+
+def obtener_url_tunnel():
+    """Devuelve el valor actual de urlTunnel de forma segura."""
+    with lock:
+        return urlTunnel
 
 def GoogleLents(driver,wait,tunnel,filename):
     # with open("/home/kimshizi/Documents/test/py/tmp/tunnel.json", "r") as archivo:
