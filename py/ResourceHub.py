@@ -159,8 +159,6 @@ from multiprocessing.pool import ThreadPool
 import threading
 
 urlTunnel = None
-lock = threading.Lock()  # Crear un lock para asegurar el acceso a urlTunnel
-# servicios_iniciados = False
 
 # -------- importaciones necesarias sino causa errores al momento de combinarlo con flask cuando se llama a Servicios
 from multiprocessing.synchronize import Lock
@@ -276,7 +274,3 @@ def GoogleLents(driver,wait,tunnel,filename):
     driver.switch_to.window(driver.window_handles[0])    
     
     return list_information[0] 
-
-# Servicios()
-# ServicioNgrok()
-# Apilocalngrok()
