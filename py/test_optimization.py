@@ -14,7 +14,7 @@ import ResourceHub as Rb
 import requests
 import threading
 
-from ResourceHub import Servicios,obtener_url_tunnel
+from ResourceHub import Servicios,Apilocalngrok
 
 import Constant as C 
 import json
@@ -222,7 +222,7 @@ def process_imagen_pdf():
     if supply is None:
         return jsonify({"error": "You must provide a supply."}), 400
 
-    tunnel = Rb.obtener_url_tunnel()
+    tunnel = Rb.Apilocalngrok()
     
     suministro = Rb.GoogleLents(driver,wait,tunnel,supply)
 
@@ -237,7 +237,7 @@ def process_imagen_pdf():
 
 @app.route('/')
 def index():
-    url = obtener_url_tunnel()
+    url = Apilocalngrok()
     return url
 
 if __name__ == "__main__":
