@@ -233,23 +233,12 @@ def Servicios():
 
     # Crear hilos
     t1 = threading.Thread(target=ServicioPython)
-    # t2 = threading.Thread(target=Apilocalngrok)
 
     # Iniciar los hilos
     t1.start()
-    # t2.start()
 
     # Dar tiempo para que ngrok inicie
     time.sleep(2)
-
-    # while True:
-    #     with lock:
-    #         if urlTunnel is not None:
-    #             break
-    #     time.sleep(0.1)  # Esperar un poco antes de verificar nuevamente
-
-    # with lock:
-    #     print("[+] Tunnel:", urlTunnel)
 
     # Esperar que ambos hilos terminen (opcional dependiendo de si quieres continuar después)
     t1.join()
