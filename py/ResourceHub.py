@@ -23,13 +23,8 @@ import os
 import time
 import platform
 import subprocess
-# from pyngrok import ngrok
-from pyngrok import ngrok, conf
+
 from dotenv import load_dotenv
-
-# from multiprocessing.pool import ThreadPool
-
-# import aspose.imaging as imaging
 
 request_logs = []
 DD = 'tmp'
@@ -165,12 +160,19 @@ import threading
 
 urlTunnel = None
 lock = threading.Lock()  # Crear un lock para asegurar el acceso a urlTunnel
-servicios_iniciados = False
+# servicios_iniciados = False
 
 # -------- importaciones necesarias sino causa errores al momento de combinarlo con flask cuando se llama a Servicios
 from multiprocessing.synchronize import Lock
 from multiprocessing.queues import SimpleQueue
 from multiprocessing.dummy import Process
+# -------------------------------------------------------------------------------------------------------------------
+
+import requests
+from deprecated import deprecated
+from pyngrok import conf,ngrok
+from pyngrok.exception import PyngrokNgrokError
+
 
 @Directorios(DD)
 def ServicioPython():
@@ -179,56 +181,92 @@ def ServicioPython():
     subprocess.Popen([f"{python}", "-m", "http.server", "5090"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     print('[+] Corriendo Servidor Python')
 
+def Apilocalngrok():
+    try:
+        # Realizar una petición GET a la API local de ngrok
+        response = requests.get('http://127.0.0.1:4040/api/tunnels')
+        response.raise_for_status()  # Verificar si hubo errores en la petición
+        
+        # Parsear la respuesta JSON
+        tunnels_info = response.json()
+        tunnels = tunnels_info.get('tunnels', [])
+        
+        if tunnels:
+            for tunnel in tunnels:
+                return tunnel.get('public_url')
+        else:
+            print("[!] No hay túneles activos")
+    except requests.exceptions.ConnectionError:
+        print("[!] No se pudo conectar a la API local de ngrok. Asegúrate de que ngrok esté en ejecución.")
+    except Exception as e:
+        print(f"[!] Error al obtener los túneles: {str(e)}")
+
+@deprecated(reason='necesitas la funcion de pago para poder usar esta funcion')
 def ServicioNgrok():
     # Cargar el archivo .env
     load_dotenv(dotenv_path='/home/kimshizi/Documents/test/py/token.env')
     # Obtener el token de acceso desde el archivo .env
     token_ngrok = os.getenv('access')
     ngrok.set_auth_token(token_ngrok)  # Asegúrate de establecer el token antes de conectar
-    tunnel = ngrok.connect(5090, "http",subdomain="osise")
+
+    # tunnel = ngrok.connect(5090, "http",subdomain="graap")
+    try:
+        # Intentar obtener los túneles con pyngrok
+        tunnels = ngrok.get_tunnels()
+        if tunnels:
+            print("[+] Túneles activos:")
+            for tunnel in tunnels:
+                print(f" - Nombre: {tunnel.name}, URL: {tunnel.public_url}, Protocolo: {tunnel.proto}")
+        else:
+            print("[!] No hay túneles activos")
+    except PyngrokNgrokError as e:
+        pass
+        # print(f"[!] Error al obtener los túneles con pyngrok: {str(e)}")
+    except Exception as e:
+        pass
+        # print(f"[!] Ocurrió un error inesperado: {str(e)}")
+
     print('[+] Corriendo Tunnel ngrok')
-
-def Servicios():
-    global urlTunnel, servicios_iniciados
     
-    with lock:  # Proteger acceso a la bandera servicios_iniciados
-        if servicios_iniciados:
-            print("\n[!] Los servicios ya están en ejecución, no se reiniciarán\n")
-            return  # No ejecutar los servicios si ya están corriendo
-        servicios_iniciados = True  # Marcar los servicios como iniciados
+def Servicios():
+    global urlTunnel
 
-    pool = ThreadPool(2)
+    # Crear hilos
+    t1 = threading.Thread(target=ServicioPython)
+    # t2 = threading.Thread(target=Apilocalngrok)
 
-    # Ejecutar funciones asíncronas sin los paréntesis
-    pool.apply_async(ServicioPython)
-    pool.apply_async(ServicioNgrok)
+    # Iniciar los hilos
+    t1.start()
+    # t2.start()
 
-    time.sleep(2)  # Dar tiempo para que ngrok inicie
+    # Dar tiempo para que ngrok inicie
+    time.sleep(2)
 
-    # Obtener túneles de Ngrok
-    tunnels = ngrok.get_tunnels()
+    # while True:
+    #     with lock:
+    #         if urlTunnel is not None:
+    #             break
+    #     time.sleep(0.1)  # Esperar un poco antes de verificar nuevamente
 
-    with lock:  # Bloquear antes de modificar urlTunnel
-        urlTunnel = str(tunnels[0].public_url) if tunnels else None
+    # with lock:
+    #     print("[+] Tunnel:", urlTunnel)
 
-    print("[+] Iniciando Los servicios")
-    with lock:
-        print("[+] Tunnel:", urlTunnel)
-
-def obtener_url_tunnel():
-    """Devuelve el valor actual de urlTunnel de forma segura."""
-    with lock:
-        return urlTunnel
+    # Esperar que ambos hilos terminen (opcional dependiendo de si quieres continuar después)
+    t1.join()
+    # t2.join()
 
 def GoogleLents(driver,wait,tunnel,filename):
+
+    waits = WebDriverWait(driver, 10)
 
     list_information = []
 
     driver.execute_script("window.open('https://www.google.com/?olud', '');")
     driver.switch_to.window(driver.window_handles[-1])
 
-    sandbox = wait.until(EC.presence_of_element_located((By.XPATH, exp.lents)))
-    sandbox.send_keys(tunnel+'/tmp/'+filename)
+    print(tunnel+'/'+filename)
+    sandbox = waits.until(EC.presence_of_element_located((By.XPATH, exp.lents)))
+    sandbox.send_keys(tunnel+'/'+filename)
 
     search = wait.until(EC.element_to_be_clickable((By.XPATH,exp.search))).click()
     translate = wait.until(EC.element_to_be_clickable((By.ID, 'ucj-3'))).click()
@@ -249,3 +287,7 @@ def GoogleLents(driver,wait,tunnel,filename):
     driver.switch_to.window(driver.window_handles[0])    
     
     return list_information[0] 
+
+# Servicios()
+# ServicioNgrok()
+# Apilocalngrok()
