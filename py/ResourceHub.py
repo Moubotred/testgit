@@ -154,9 +154,28 @@ def Directorios(directorio):
         return python
     return Servidor
 
+from functools import wraps
+
+def measure_time(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = None
+        try:
+            result = func(*args, **kwargs)
+        except Exception as e:
+            end = time.time()
+            print(f"Error in {func.__name__}: {e}")
+            print(f"[!] Funcion: {func.__name__} tiempo de respuesta: {end - start:.2f} segundos")
+            raise
+        end = time.time()
+        print(f"\n[+] Funcion: {func.__name__} tiempo de respuesta: {end - start:.2f} segundos")
+        return result
+    return wrapper
 
 from multiprocessing.pool import ThreadPool
 import threading
+
 
 urlTunnel = None
 
@@ -170,7 +189,6 @@ import requests
 from deprecated import deprecated
 from pyngrok import conf,ngrok
 from pyngrok.exception import PyngrokNgrokError
-
 
 @Directorios(DD)
 def ServicioPython():
@@ -195,7 +213,7 @@ def Apilocalngrok():
         else:
             print("[!] No hay túneles activos")
     except requests.exceptions.ConnectionError:
-        print("[!] No se pudo conectar a la API local de ngrok. Asegúrate de que ngrok esté en ejecución.")
+        print("[!] Asegúrate de que ngrok esté en ejecución manualmnete")
     except Exception as e:
         print(f"[!] Error al obtener los túneles: {str(e)}")
 
@@ -248,12 +266,21 @@ def GoogleLents(driver,wait,tunnel,filename):
 
     list_information = []
 
-    driver.execute_script("window.open('https://www.google.com/?olud', '');")
+    driver.execute_script("window.open('https://www.google.com/search?client=firefox-b-d&q=ll', '');")
     driver.switch_to.window(driver.window_handles[-1])
 
-    print(tunnel+'/'+filename)
-    sandbox = waits.until(EC.presence_of_element_located((By.XPATH, exp.lents)))
-    sandbox.send_keys(tunnel+'/'+filename)
+    driver.refresh()
+
+    lents = waits.until(EC.element_to_be_clickable((By.CLASS_NAME, 'nDcEnd'))).click()
+
+    enlace = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.cB9M7[jsname="W7hAGe"]')))
+
+    enlace = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '.cB9M7[jsname="W7hAGe"]')))
+
+    # enlace = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '.cB9M7[jsname="W7hAGe"]')))
+
+    enlace.click()
+    enlace.send_keys(tunnel+'/'+filename)
 
     search = wait.until(EC.element_to_be_clickable((By.XPATH,exp.search))).click()
     translate = wait.until(EC.element_to_be_clickable((By.ID, 'ucj-3'))).click()
