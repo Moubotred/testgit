@@ -15,40 +15,16 @@ import requests
 import threading
 
 from ResourceHub import Servicios,Apilocalngrok
+from ResourceHub import measure_time
 
 import Constant as C 
 import json
-
-# from multiprocessing.pool import ThreadPool
 
 app = Flask(__name__)
 
 # Global variables for WebDriver and WebDriverWait
 driver = None
 wait = None
-
-# decoraror para medir tiempo
-def measure_time(func):
-    """
-    Decorador para medir el tiempo de ejecución de una función.
-    
-    Args:
-        func: La función a decorar.
-    
-    Returns:
-        wrapper: Función decorada que mide el tiempo de ejecución.
-    """
-    def wrapper(*args, **kwargs):
-        start = time.time()
-        try:
-            result = func(*args, **kwargs)
-        except Exception as e:
-            print(f"Error in {func.__name__}: {e}")
-            raise
-        end = time.time()
-        print(f"{func.__name__} took {end - start:.2f} seconds")
-        return result
-    return wrapper
 
 # busca el frame que contiene la url
 def shipping_charge(wait):
@@ -78,13 +54,14 @@ def shipping_charge(wait):
             wait.until(EC.presence_of_element_located((By.ID, C.exp.cargo))).click()
             Framesubdoc = wait.until(EC.presence_of_element_located((By.ID, C.exp.subdoc))).get_attribute('src')
             return Framesubdoc
+        
         elif 'VOLANTES / AVISO DE CORTE' == info:
-            return 'No METER CHANGE letter, only CUT NOTICE'
+            return '[!] No hay carta para cambio solo Corte'
+        
         elif 'RECIBO / POSTALES' == info:
-            return 'No METER CHANGE letter, only POSTCARDS'
+            return '[!] No hay carta para cambio solo Postales'
 
 # carga el numero de suministro y lo envia    
-@measure_time
 def send_supply(wait, supply):
     """
     Interactúa con una página web para enviar un suministro y obtener un atributo del iframe.
@@ -112,7 +89,6 @@ def send_supply(wait, supply):
         return None
 
 # convierte documento a un pdf
-@measure_time
 def pdf_converter(response, supply):
     result = response.json()
     result_url = result.get('result')
@@ -174,6 +150,7 @@ def init_browser():
 
 # endpoint para obtener el frame y ver la url
 @app.route('/process_supply', methods=['POST'])
+@measure_time
 def process_supply():
     """
     Endpoint para procesar un suministro.
@@ -199,6 +176,7 @@ def process_supply():
 
 # endpoint para convertir el frame a un pdf
 @app.route('/process_convert_pdf', methods=['POST'])
+@measure_time
 def process_convert_pdf():
     data = request.json
     supply = data.get('suministro')
@@ -215,25 +193,34 @@ def process_convert_pdf():
     
     return jsonify({"result": filename})
 
+# endpoint para convertir el imagen a un pdf
 @app.route('/process_image_a_pdf', methods=['POST'])
+@measure_time
 def process_imagen_pdf():
     data = request.json
     supply = data.get('suministro')
     if supply is None:
         return jsonify({"error": "You must provide a supply."}), 400
-
-    tunnel = Rb.Apilocalngrok()
     
-    suministro = Rb.GoogleLents(driver,wait,tunnel,supply)
+    tunnel = Rb.Apilocalngrok()
+    # if tunnel is None:
+        # return jsonify({"error": "Ngrok is not running. Please ensure the Ngrok service is active."}), 503
 
-    response = requests.post("http://localhost:5000/process_convert_pdf", json={"suministro": suministro})
-    if response.status_code != 200:
-        return jsonify({"error": "Error processing the supply."}), response.status_code
-
-    result = response.json()
-    result_name = result.get('result')
-
-    return jsonify({"result":result_name})    
+    try:
+        if tunnel != None:
+            suministro = Rb.GoogleLents(driver, wait, tunnel, supply)
+            response = requests.post("http://localhost:5000/process_convert_pdf", json={"suministro": suministro})
+            if response.status_code != 200:
+                return jsonify({"error": "Error processing the supply."}), response.status_code
+            result = response.json()
+            result_name = result.get('result')
+            return jsonify({"result":result_name})    
+        else:
+            print('[!] No se ejecutara la funcion GoogleLents hasta habilitar ngrok manualmente')
+            return jsonify({"error": "."}),500
+    except Exception as e:
+        app.logger.error(f"[!] Fallo al ejecutar GoogleLents: {str(e)}")
+        # return jsonify({"error": "Failed to process the image to PDF."}), 500
 
 @app.route('/')
 def index():
@@ -244,4 +231,4 @@ if __name__ == "__main__":
     hilo_servicios = threading.Thread(target=Rb.Servicios)
     hilo_servicios.start()
     init_browser()  # Initialize the browser when the application starts
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000,debug=False)
