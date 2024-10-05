@@ -1,171 +1,165 @@
-
-// /home/kimshizi/Documents/test/py/
-// /home/kimshizi/Documents/test/py/
-
-// boks
-
-// // resisar este issues para ver si hay solucion de inicio de session
-// // https://github.com/pedroslopez/whatsapp-web.js/pull/2816
-
-
-const {exec} = require('child_process');
-const fs = require('fs');
+const { exec } = require('child_process');
 const qrcode = require('qrcode-terminal');
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
-const path = require('path');
 
-// Ruta al directorio que contiene el archivo HTML
-const directorio = '.wwebjs_cache';
+const utils = require('./utils');
 
-// Función que retorna una promesa que se resuelve con un valor booleano
-function comprobarArchivoHtml() {
-    return new Promise((resolve, reject) => {
-        fs.readdir(directorio, (err, archivos) => {
-            if (err) {
-                reject('Error al leer el directorio:', err);
-                return;
-            }
+const suscriptores = {};
 
-            // Filtrar los archivos HTML
-            const archivosHtml = archivos.filter(archivo => path.extname(archivo) === '.html');
+let archivoSuscriptores = './suscriptores.json';
 
-            // Comprobar si hay exactamente un archivo HTML
-            if (archivosHtml.length === 1) {
-                resolve(true);
-            } else {
-                resolve(false);
-            }
-        });
-    });
-}
+// Initialize the client with proper Puppeteer options
+const client = new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    }
+});
 
-// Inicializar el cliente de WhatsApp solo si el archivo HTML está presente
-comprobarArchivoHtml()
-    .then(existeUnArchivoHtml => {
-        if (existeUnArchivoHtml) {
-            console.log('Bot Iniciando');
+// Generate and display the QR code
+client.on('qr', qr => {
+    console.log('QR code received, scan please!');
+    qrcode.generate(qr, { small: true });
+});
 
-            const client = new Client({
-                authStrategy: new LocalAuth({
-                    // session: sessionData, // Asume que sessionData está correctamente configurado
-                    puppeteer: {
-                        args: ['--no-sandbox', '--disable-setuid-sandbox']
-                    }
-                })
-            });
+// Log authentication success
+client.on('authenticated', () => {
+    console.log('Authenticated successfully!');
+});
 
-            // Aviso si el bot está listo
-            client.on('ready', () => {
-                console.log('Bot en escuha de comandos:');
-            });
+// Handle authentication failure
+client.on('auth_failure', msg => {
+    console.error('Authentication failure:', msg);
+});
 
-            // Comandos del bot
-            client.on('message', async message => {
+// Client is ready to receive messages
+client.on('ready', () => {
+    console.log('Client is ready!');
+});
 
-                const contact = await message.getContact();
-                const contactName = contact.pushname || contact.notifyName || 'Undefined';
-                console.log('');
-                console.log(`by: ${contactName}`);
-                console.log('Command:',message.body);
+client.on('message', async message => {
+    if (message.body === '/help'){
+        utils.help(message)
+    }
+    else if (message.body === '/lg') {
+        suscriptores[message.from] = true;
+        utils.guardarSuscriptores(archivoSuscriptores, suscriptores, message);
+    }
 
-                const partes = message.body.split(' ');
+    // else if (suscriptores[message.from] === true && message.body.startsWith('/i') && message.hasMedia) {
+    //     if (message.hasMedia) {
+    //         const media = await message.downloadMedia();
+    //         if (media) {
+    //             // Guarda la imagen en el disco
+    //             const fileName = chance.string({ length: 7, pool:'1234567'}) + '.jpg';
+    //             fs.writeFileSync(`/home/kimshizi/Documents/test/py/tmp/${fileName}`, media.data, 'base64');
+
+    //             const value = utils.execution_cmd(fileName,'apiImg',message)
+    //                 .then(resultado=>{
+    //                     if (resultado.trim().endsWith('.pdf')) {
+    //                         const pdf = MessageMedia.fromFilePath(`/home/kimshizi/Documents/test/py/pdf/${resultado}`.trim());
+    //                         message.reply(`Respuesta: ${resultado}`, undefined, { media: pdf, quotedMessageId: message.id._serialized });
+    //                         console.log(`ReponsePython: envio existoso ${resultado}`);
+    //                     }
+    //                     // message.reply(`Respuesta: ${resultado}`);
+    //                     // console.log(`ReponsePython: ${resultado}`);
+    //                 })
+
+    //                 .catch(error =>{
+    //                     console.log(`ReponsePython: ${error}`);
+    //                 })
+
+    //         }
+    //     }
+    // }
+
+    else if (suscriptores[message.from] === true){
+        // Verificar si el comando /s tiene al menos dos partes y el argumento no está vacío
+        const contact = await message.getContact();
+        const contactName = contact.pushname || contact.notifyName || 'Undefined';
+        const partes = message.body.split(' ');
+        const suministro = message.body.split(' ')[1];        
+
+        if (suscriptores[message.from] === true && message.body.startsWith('/i') && message.hasMedia) {
+            console.log(`by: ${contactName}`);
+            console.log('Command:',message.body);   
+            if (message.hasMedia) {
+                const media = await message.downloadMedia();
+                if (media) {
+                    // Guarda la imagen en el disco
+                    const fileName = chance.string({ length: 7, pool:'1234567'}) + '.jpg';
+                    fs.writeFileSync(`/home/kimshizi/Documents/test/py/tmp/${fileName}`, media.data, 'base64');
     
-                // Verificar si el comando /s tiene al menos dos partes y el argumento no está vacío
-                if (partes.length < 2 || partes[1].trim() === '') {
-                    // Manejar el caso en que no se proporciona el argumento
-                    message.reply(`Respuesta: command ${partes[0]} requiere suministro`);
-                    console.error(`ReponsePython: command ${partes[0]} requiere suministro`);
-                    return;
-                }
-                
-
-                if (message.body.startsWith('/s ')) {
-                    const numero = message.body.split(' ')[1];
-                    
-                    exec(`python3 /home/kimshizi/Documents/test/py/Utils.py ${numero} --mode apiUrl`, (error, stdout, stderr) => {
-                        if (error) {
-                            console.error(`Error ejecutando el script: ${error.message}`);
-                            return;
-                        }
-                        if (stderr) {
-                            console.error(`Error estándar: ${stderr}`);
-                            return;
-                        }
-                        message.reply(`Respuesta: ${stdout}`);
-                        console.log(`ReponsePython: ${stdout}`);
-                    });
-                }
-
-                if (message.body.startsWith('/d ')) {
-                    const numero = message.body.split(' ')[1];
-                    exec(`python3 /home/kimshizi/Documents/test/py/Utils.py ${numero} --mode apiDoc`, (error, stdout, stderr) => {
-                        if (error) {
-                            console.error(`Error ejecutando el script: ${error.message}`);
-                            return;
-                        }
-                        if (stderr) {
-                            console.error(`Error estándar: ${stderr}`);
-                            return;
-                        }
-
-                        if (stdout.trim() === 'False') {
-                            message.reply(`Suministro No Existe`);
-
-                        } else {
-                            if (stdout.trim().endsWith('.pdf')){
-                            const pdf = MessageMedia.fromFilePath(`${__dirname}/py/pdf/${numero}.pdf`);
-                            message.reply(`Respuesta: ${stdout.trim()}`, undefined, { media: pdf, quotedMessageId: message.id._serialized });
+                    const value = utils.execution_cmd(fileName,'apiImg',message)
+                        .then(resultado=>{
+                            if (resultado.trim().endsWith('.pdf')) {
+                                const pdf = MessageMedia.fromFilePath(`/home/kimshizi/Documents/test/py/pdf/${resultado}`.trim());
+                                message.reply(`Respuesta: ${resultado}`, undefined, { media: pdf, quotedMessageId: message.id._serialized });
+                                console.log(`ReponsePython: envio existoso ${resultado}`);
                             }
-
-                            else{
-                                message.reply(`Respuesta: ${stdout.trim()}`);
-                            };
-                        }
-                        console.log(`ReponsePython: ${stdout}`);
-                    });
+                            // message.reply(`Respuesta: ${resultado}`);
+                            // console.log(`ReponsePython: ${resultado}`);
+                        })
+    
+                        .catch(error =>{
+                            console.log(`ReponsePython: ${error}`);
+                        })
+    
                 }
-            });
-
-            client.initialize();
-
-        } else {
-            console.log('No se encontró ningún archivo HTML. Por favor, escanee el QR nuevamente.');
-
-            const client = new Client({
-                authStrategy: new LocalAuth({
-                    puppeteer: {
-                        args: ['--no-sandbox', '--disable-setuid-sandbox']
-                    }
-                })
-            });
-
-            // Manejar el evento QR generado
-            client.on('qr', qr => {
-                qrcode.generate(qr, { small: true });
-            });
-
-            client.initialize();
+            }
         }
-    })
-    .catch(error => {
-        console.error('Session caducada escanerar qr:');
-        const client = new Client({
-            authStrategy: new LocalAuth({
-                puppeteer: {
-                    args: ['--no-sandbox', '--disable-setuid-sandbox']
-                }
-            })
-        });
 
-        // Manejar el evento QR generado
-        client.on('qr', qr => {
-            qrcode.generate(qr, { small: true });
-        });
+        // console.log(suministro);
+        // if (partes.length < 2 || partes[1].trim() === '') {
+            // utils.argument_management(partes,message)
+        // }
+        if (!isNaN(suministro) && suministro.length >= 1 && suministro.length <= 7) {
 
-        client.on('ready', () => {
-            console.log('Session iniciada detener y iniciar el app.js');
-        });
+            console.log(`by: ${contactName}`);
+            console.log('Command:',message.body);
 
-        client.initialize();
-    });
+            if (message.body.startsWith('/s ')) {
+            
+                const value = utils.execution_cmd(suministro,'apiUrl',message)
+                    .then(resultado=>{
+                        message.reply(`Respuesta: ${resultado}`);
+                        console.log(`ReponsePython: ${resultado}`);
+                    })
+    
+                    .catch(error =>{
+                        console.log(`ReponsePython: ${error}`);
+                    })
+    
+            }
+    
+            if (message.body.startsWith('/d ')) {
+    
+                const value = utils.execution_cmd(suministro,'apiDoc',message)
+                    .then(resultado =>{
+                        utils.sendfile(resultado,suministro,message)
+                    })
+    
+                    .catch(error =>{
+                        console.log(error);
+                    })
+            }
+            
+            // if (message.body.startsWith('/i') && message.hasMedia) {
+            //     if (message.hasMedia) {
+            //         const media = await message.downloadMedia();
+            //         if (media) {
+            //             // Guarda la imagen en el disco
+            //             fs.writeFileSync('/home/kimshizi/Documents/test/py/tmp/over.jpg', media.data, 'base64');
+            //             console.log('Imagen descargada');
+            //         }
+            //     }
+            // }
+                    
+        }
 
+    }
+
+});
+
+
+client.initialize();
